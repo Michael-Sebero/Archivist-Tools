@@ -5,7 +5,7 @@
 ```
 pip install tqdm pillow imagehash piexif
 
-git clone https://github.com/michaelsebero/Archivist-Tools
+git clone https://github.com/MichaelSebero/Archivist-Tools
 
 sh /home/$USER/Archivist-Tools/archivist-tools
 ```
