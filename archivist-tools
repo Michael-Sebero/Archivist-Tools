@@ -12,6 +12,7 @@ commands=(
     "Rename Detailed Files"
     "Sort by File Format"
     "Sort by Filetype"
+    "Sort by Title"
     "Sort by Year"
     "Quit"
 )
@@ -72,9 +73,13 @@ execute_command() {
         "Sort by Filetype") 
             handle_sort_by_filetype
             ;;
+        "Sort by Title") 
+            python3 Archivist-Tools/tools/sort-by-title.py
+            read -p "Press Enter to return to the menu..."
+            ;;  
         "Sort by Year") 
             handle_sort_by_year
-            ;;
+            ;;         
         "Quit") 
             echo -e "\n\033[1mExiting script\033[0m"
             exit 0

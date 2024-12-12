@@ -47,5 +47,8 @@ This script sorts files by their file format into separate directories.
 ## Sort by Filetype
 This script sorts files by their filetype into separate directories and `sort-by-filetype-r` does this recursively.
 
+## Sort by Title
+This script sorts files by their common title into separate folders.
+
 ## Sort by Year
 This script sorts files in a given directory based off the year created / modified into separate year directories and `sort-by-year-r` does this recursively.
