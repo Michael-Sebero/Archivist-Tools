@@ -1,31 +1,33 @@
 import os
 
-def rename_to_capitalize_first_letter(directory):
-    for entry in os.listdir(directory):
-        original_path = os.path.join(directory, entry)
-        if os.path.isdir(original_path):
-            # Recursively rename subdirectories and their contents
-            rename_to_capitalize_first_letter(original_path)
-            # Rename directory itself to capitalize first letter
-            new_name = entry.capitalize()
-            new_path = os.path.join(directory, new_name)
-            os.rename(original_path, new_path)
-            print(f'Renamed directory {original_path} to {new_path}')
-        else:
-            # Rename files to capitalize first letter
-            base_name, extension = os.path.splitext(entry)
-            new_name = base_name.capitalize() + extension
-            new_path = os.path.join(directory, new_name)
-            os.rename(original_path, new_path)
-            print(f'Renamed file {original_path} to {new_path}')
+def rename_to_capitalize_first_letter(directory, recursive=False):
+    def process_directory(dir_path):
+        for entry in os.scandir(dir_path):
+            if entry.is_dir() and recursive:
+                # Process subdirectory before renaming it
+                process_directory(entry.path)
+                # Rename directory itself
+                new_name = entry.name.capitalize()
+                new_path = os.path.join(os.path.dirname(entry.path), new_name)
+                os.rename(entry.path, new_path)
+                print(f'Renamed directory {entry.path} to {new_path}')
+            elif entry.is_file():
+                # Rename files
+                base_name, extension = os.path.splitext(entry.name)
+                new_name = base_name.capitalize() + extension
+                new_path = os.path.join(os.path.dirname(entry.path), new_name)
+                os.rename(entry.path, new_path)
+                print(f'Renamed file {entry.path} to {new_path}')
+
+    process_directory(directory)
 
 if __name__ == "__main__":
-    # Prompt user to enter directory path
-    directory = input("Enter the directory path: ").strip()
+    directory = input("Directory path: ").strip()
+    recursive = input("Apply recursively? (y/n): ").lower() == 'y'
     
     if not os.path.isdir(directory):
         print(f"Error: {directory} is not a valid directory.")
         exit(1)
     
-    rename_to_capitalize_first_letter(directory)
-    print(f"All files and directories in {directory} have been renamed with first letter capitalized.")
+    rename_to_capitalize_first_letter(directory, recursive)
+    print(f"All files{' and directories' if recursive else ''} in {directory} have been renamed with first letter capitalized.")

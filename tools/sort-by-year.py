@@ -4,11 +4,11 @@ from datetime import datetime
 from PIL import Image
 import piexif
 
-# Supported image and video file types
+# [Previous constants remain the same]
 IMAGE_EXTENSIONS = ('jpg', 'jpeg', 'png', 'heic')
 VIDEO_EXTENSIONS = ('mp4', 'mov', 'avi', 'mkv')
 
-# Function to get the date taken for images from EXIF metadata
+# [Previous helper functions remain the same]
 def get_image_date_taken(file_path):
     try:
         image = Image.open(file_path)
@@ -18,14 +18,12 @@ def get_image_date_taken(file_path):
             date_taken = exif_dict.get('Exif', {}).get(piexif.ExifIFD.DateTimeOriginal)
             if date_taken:
                 date_taken_str = date_taken.decode('utf-8')
-                # Date format is "YYYY:MM:DD HH:MM:SS", we only care about "YYYY" and "MM"
                 date_taken_obj = datetime.strptime(date_taken_str, "%Y:%m:%d %H:%M:%S")
                 return date_taken_obj
     except Exception as e:
         print(f"Could not extract date for {file_path}: {e}")
     return None
 
-# Function to get the last modified date for videos
 def get_video_date_taken(file_path):
     try:
         last_modified_time = os.path.getmtime(file_path)
@@ -35,52 +33,47 @@ def get_video_date_taken(file_path):
         print(f"Could not extract date for {file_path}: {e}")
     return None
 
-# Function to organize files by date into year/month and Images/Videos subfolders
-def organize_by_date(src_dir):
-    # Walk through all files in the source directory
-    for root, dirs, files in os.walk(src_dir):
-        for file in files:
-            # Get full path of the file
-            file_path = os.path.join(root, file)
-            date_taken = None
-            media_type = None
+def organize_by_date(src_dir, recursive=False):
+    def process_directory(directory):
+        for entry in os.scandir(directory):
+            if entry.is_file():
+                file_path = entry.path
+                date_taken = None
+                media_type = None
 
-            # Check if the file is an image and get the capture date from EXIF metadata
-            if file.lower().endswith(IMAGE_EXTENSIONS):
-                date_taken = get_image_date_taken(file_path)
-                media_type = "Images"
-            # Check if the file is a video and get the last modified date
-            elif file.lower().endswith(VIDEO_EXTENSIONS):
-                date_taken = get_video_date_taken(file_path)
-                media_type = "Videos"
+                if entry.name.lower().endswith(IMAGE_EXTENSIONS):
+                    date_taken = get_image_date_taken(file_path)
+                    media_type = "Images"
+                elif entry.name.lower().endswith(VIDEO_EXTENSIONS):
+                    date_taken = get_video_date_taken(file_path)
+                    media_type = "Videos"
 
-            # If a date was found, organize the file by that date
-            if date_taken:
-                # Extract the year and month from the date taken
-                year = date_taken.strftime("%Y")
-                month = date_taken.strftime("%B")
+                if date_taken:
+                    year = date_taken.strftime("%Y")
+                    month = date_taken.strftime("%B")
 
-                # Create directories for year, month, and media type (Images/Videos) if they don't exist
-                year_dir = os.path.join(src_dir, year)
-                month_dir = os.path.join(year_dir, month)
-                media_dir = os.path.join(month_dir, media_type)
+                    year_dir = os.path.join(src_dir, year)
+                    month_dir = os.path.join(year_dir, month)
+                    media_dir = os.path.join(month_dir, media_type)
 
-                if not os.path.exists(media_dir):
-                    os.makedirs(media_dir)
+                    if not os.path.exists(media_dir):
+                        os.makedirs(media_dir)
 
-                # Move the file to the respective directory
-                shutil.move(file_path, os.path.join(media_dir, file))
-                print(f'Moved {file} to {media_dir}')
-            else:
-                print(f"Date taken not found for {file}, skipping...")
+                    shutil.move(file_path, os.path.join(media_dir, entry.name))
+                    print(f'Moved {entry.name} to {media_dir}')
+                else:
+                    print(f"Date taken not found for {entry.name}, skipping...")
+            elif entry.is_dir() and recursive:
+                process_directory(entry.path)
+
+    process_directory(src_dir)
 
 if __name__ == "__main__":
-    # Prompt the user to input the source directory
-    source_directory = input("Enter the directory where the files are located: ").strip()
+    source_directory = input("Directory path: ").strip()
+    recursive = input("Apply recursively? (y/n): ").lower() == 'y'
 
-    # Ensure the entered path exists
     if not os.path.exists(source_directory):
         print("Source directory does not exist. Please enter a valid path.")
     else:
-        organize_by_date(source_directory)
+        organize_by_date(source_directory, recursive)
         print("Sorting complete.")

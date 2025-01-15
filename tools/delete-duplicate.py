@@ -2,28 +2,36 @@ import os
 import hashlib
 from pathlib import Path
 
-def remove_duplicates(directory):
- unique_files = dict()
- list_of_files = os.listdir(directory)
- 
- for file in list_of_files:
-    file_path = Path(os.path.join(directory, file))
-    if file_path.is_file():
-        try:
-            Hash_file = hashlib.md5(open(file_path, 'rb').read()).hexdigest()
-        except (FileNotFoundError, PermissionError) as e:
-            print(f"Failed to open {file_path}: {e}")
-            continue
+def remove_duplicates(directory, recursive=False):
+    unique_files = dict()
+    
+    def process_directory(dir_path):
+        for item in os.scandir(dir_path):
+            if item.is_file():
+                try:
+                    file_hash = hashlib.md5(open(item.path, 'rb').read()).hexdigest()
+                except (FileNotFoundError, PermissionError) as e:
+                    print(f"Failed to open {item.path}: {e}")
+                    continue
 
-        if Hash_file not in unique_files:
-            unique_files[Hash_file] = file_path
-        else:
-            os.remove(file_path)
-            print(f"{file_path} has been deleted")
+                if file_hash not in unique_files:
+                    unique_files[file_hash] = item.path
+                else:
+                    os.remove(item.path)
+                    print(f"{item.path} has been deleted")
+            elif item.is_dir() and recursive:
+                process_directory(item.path)
+    
+    process_directory(directory)
 
 def main():
- directory = input("Enter the directory: ")
- remove_duplicates(directory)
+    directory = input("Directory path: ")
+    recursive = input("Apply recursively? (y/n): ").lower() == 'y'
+    
+    if os.path.exists(directory):
+        remove_duplicates(directory, recursive)
+    else:
+        print("Directory does not exist!")
 
 if __name__ == "__main__":
- main()
+    main()

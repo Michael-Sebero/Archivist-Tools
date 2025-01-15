@@ -1,22 +1,20 @@
 import os
 
-def delete_files(directory, keyword):
+def delete_files(directory, keyword, recursive=False):
     deleted_files = []
     
-    # Get a list of all files in the directory
-    files = os.listdir(directory)
+    def process_directory(dir_path):
+        for item in os.scandir(dir_path):
+            if item.is_file() and keyword.lower() in item.name.lower():
+                try:
+                    os.remove(item.path)
+                    deleted_files.append(item.path)
+                except Exception as e:
+                    print(f"Error deleting {item.path}: {e}")
+            elif item.is_dir() and recursive:
+                process_directory(item.path)
     
-    for file in files:
-        filename = file.lower()
-        
-        # Check if the keyword is in the filename
-        if keyword.lower() in filename:
-            file_path = os.path.join(directory, file)
-            try:
-                os.remove(file_path)
-                deleted_files.append(file_path)
-            except Exception as e:
-                print(f"Error deleting {file_path}: {e}")
+    process_directory(directory)
     
     if deleted_files:
         print("\nSummary of deleted files:")
@@ -25,9 +23,15 @@ def delete_files(directory, keyword):
     else:
         print("No files were deleted.")
 
-if __name__ == "__main__":
-    # Get the directory and keyword from the user
-    directory = input("Enter the directory path: ").strip()
-    keyword = input("Enter the keyword to delete files containing it: ").strip()
+def main():
+    directory = input("Directory path: ")
+    keyword = input("Enter the keyword to delete files containing it: ")
+    recursive = input("Apply recursively? (y/n): ").lower() == 'y'
     
-    delete_files(directory, keyword)
+    if os.path.exists(directory):
+        delete_files(directory, keyword, recursive)
+    else:
+        print("Directory does not exist!")
+
+if __name__ == "__main__":
+    main()
