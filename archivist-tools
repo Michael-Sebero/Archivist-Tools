@@ -36,31 +36,36 @@ display_list() {
 execute_command() {
     case ${commands[$selected]} in
         "Change Hash") 
-            handle_change_hash
+            python3 Archivist-Tools/tools/change-hash.py
+            read -p "Press Enter to return to the menu..."
             ;;
         "Compare Directories")
             python3 Archivist-Tools/tools/compare-directories.py
             read -p "Press Enter to return to the menu..."
             ;;
         "Delete Duplicate") 
-            handle_delete_duplicate
+            python3 Archivist-Tools/tools/delete-duplicate.py
+            read -p "Press Enter to return to the menu..."
             ;;
         "Delete Empty Folders") 
             python3 Archivist-Tools/tools/delete-empty-folders.py
             read -p "Press Enter to return to the menu..."
             ;;
         "Delete Filename Keyword") 
-            handle_delete_filename_keyword
+            python3 Archivist-Tools/tools/delete-filename-keyword.py
+            read -p "Press Enter to return to the menu..."
             ;;
         "Empty Directory Contents") 
             python3 Archivist-Tools/tools/empty-directory-contents.py
             read -p "Press Enter to return to the menu..."
             ;;
         "Give Random Name") 
-            handle_give_random_name
+            python3 Archivist-Tools/tools/give-random-name.py
+            read -p "Press Enter to return to the menu..."
             ;;
         "Mass Uppercase") 
-            handle_mass_uppercase
+            python3 Archivist-Tools/tools/mass-uppercase.py
+            read -p "Press Enter to return to the menu..."
             ;;
         "Rename Detailed Files") 
             python3 Archivist-Tools/tools/rename-detailed-files.py
@@ -71,15 +76,17 @@ execute_command() {
             read -p "Press Enter to return to the menu..."
             ;;
         "Sort by Filetype") 
-            handle_sort_by_filetype
+            python3 Archivist-Tools/tools/sort-by-filetype.py
+            read -p "Press Enter to return to the menu..."
             ;;
         "Sort by Title") 
             python3 Archivist-Tools/tools/sort-by-title.py
             read -p "Press Enter to return to the menu..."
-            ;;  
+            ;;
         "Sort by Year") 
-            handle_sort_by_year
-            ;;         
+            python3 Archivist-Tools/tools/sort-by-year.py
+            read -p "Press Enter to return to the menu..."
+            ;;
         "Quit") 
             echo -e "\n\033[1mExiting script\033[0m"
             exit 0
@@ -90,323 +97,14 @@ execute_command() {
     esac
 }
 
-# Function to handle Change Hash command and its recursive option
-handle_change_hash() {
-    recursive_options=("Default" "Recursive" "Quit")
-    recursive_selected=0
-
-    while true; do
-        clear
-        echo -e "\033[1m  Change Hash Options\033[0m\n  "
-        for i in "${!recursive_options[@]}"; do
-            if [ $i -eq $recursive_selected ]; then
-                echo -e "\033[1m➤ ${recursive_options[$i]}\033[0m\n"
-            else
-                echo -e "  ${recursive_options[$i]}\n"
-            fi
-        done
-
-        read -sn 1 key
-
-        case $key in
-            "A") ((recursive_selected--)); [ $recursive_selected -lt 0 ] && recursive_selected=$(( ${#recursive_options[@]} - 1 ));;
-            "B") ((recursive_selected++)); [ $recursive_selected -ge ${#recursive_options[@]} ] && recursive_selected=0 ;;
-            "") 
-                case ${recursive_options[$recursive_selected]} in
-                    "Default")
-                        python3 Archivist-Tools/tools/change-hash.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Recursive")
-                        python3 Archivist-Tools/tools/change-hash-r.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Quit")
-                        return
-                        ;;
-                    *) 
-                        echo -e "\nInvalid selection"
-                        ;;
-                esac
-                ;;
-            *) ;;
-        esac
-    done
-}
-
-# Function to handle Delete Duplicate command and its recursive option
-handle_delete_duplicate() {
-    recursive_options=("Default" "Recursive" "Quit")
-    recursive_selected=0
-
-    while true; do
-        clear
-        echo -e "\033[1m  Delete Duplicate Options\033[0m\n  "
-        for i in "${!recursive_options[@]}"; do
-            if [ $i -eq $recursive_selected ]; then
-                echo -e "\033[1m➤ ${recursive_options[$i]}\033[0m\n"
-            else
-                echo -e "  ${recursive_options[$i]}\n"
-            fi
-        done
-
-        read -sn 1 key
-
-        case $key in
-            "A") ((recursive_selected--)); [ $recursive_selected -lt 0 ] && recursive_selected=$(( ${#recursive_options[@]} - 1 ));;
-            "B") ((recursive_selected++)); [ $recursive_selected -ge ${#recursive_options[@]} ] && recursive_selected=0 ;;
-            "") 
-                case ${recursive_options[$recursive_selected]} in
-                    "Default")
-                        python3 Archivist-Tools/tools/delete-duplicate.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Recursive")
-                        python3 Archivist-Tools/tools/delete-duplicate-r.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Quit")
-                        return
-                        ;;
-                    *) 
-                        echo -e "\nInvalid selection"
-                        ;;
-                esac
-                ;;
-            *) ;;
-        esac
-    done
-}
-
-# Function to handle Delete Filename Keyword command and its recursive option
-handle_delete_filename_keyword() {
-    recursive_options=("Default" "Recursive" "Quit")
-    recursive_selected=0
-
-    while true; do
-        clear
-        echo -e "\033[1m  Delete Filename Keyword Options\033[0m\n  "
-        for i in "${!recursive_options[@]}"; do
-            if [ $i -eq $recursive_selected ]; then
-                echo -e "\033[1m➤ ${recursive_options[$i]}\033[0m\n"
-            else
-                echo -e "  ${recursive_options[$i]}\n"
-            fi
-        done
-
-        read -sn 1 key
-
-        case $key in
-            "A") ((recursive_selected--)); [ $recursive_selected -lt 0 ] && recursive_selected=$(( ${#recursive_options[@]} - 1 ));;
-            "B") ((recursive_selected++)); [ $recursive_selected -ge ${#recursive_options[@]} ] && recursive_selected=0 ;;
-            "") 
-                case ${recursive_options[$recursive_selected]} in
-                    "Default")
-                        python3 Archivist-Tools/tools/delete-filename-keyword.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Recursive")
-                        python3 Archivist-Tools/tools/delete-filename-keyword-r.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Quit")
-                        return
-                        ;;
-                    *) 
-                        echo -e "\nInvalid selection"
-                        ;;
-                esac
-                ;;
-            *) ;;
-        esac
-    done
-}
-
-# Function to handle Give Random Name command and its recursive option
-handle_give_random_name() {
-    recursive_options=("Default" "Recursive" "Quit")
-    recursive_selected=0
-
-    while true; do
-        clear
-        echo -e "\033[1m  Give Random Name Options\033[0m\n  "
-        for i in "${!recursive_options[@]}"; do
-            if [ $i -eq $recursive_selected ]; then
-                echo -e "\033[1m➤ ${recursive_options[$i]}\033[0m\n"
-            else
-                echo -e "  ${recursive_options[$i]}\n"
-            fi
-        done
-
-        read -sn 1 key
-
-        case $key in
-            "A") ((recursive_selected--)); [ $recursive_selected -lt 0 ] && recursive_selected=$(( ${#recursive_options[@]} - 1 ));;
-            "B") ((recursive_selected++)); [ $recursive_selected -ge ${#recursive_options[@]} ] && recursive_selected=0 ;;
-            "") 
-                case ${recursive_options[$recursive_selected]} in
-                    "Default")
-                        python3 Archivist-Tools/tools/give-random-name.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Recursive")
-                        python3 Archivist-Tools/tools/give-random-name-r.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Quit")
-                        return
-                        ;;
-                    *) 
-                        echo -e "\nInvalid selection"
-                        ;;
-                esac
-                ;;
-            *) ;;
-        esac
-    done
-}
-
-# Function to handle Mass Uppercase command and its recursive option
-handle_mass_uppercase() {
-    recursive_options=("Default" "Recursive" "Quit")
-    recursive_selected=0
-
-    while true; do
-        clear
-        echo -e "\033[1m  Mass Uppercase Options\033[0m\n  "
-        for i in "${!recursive_options[@]}"; do
-            if [ $i -eq $recursive_selected ]; then
-                echo -e "\033[1m➤ ${recursive_options[$i]}\033[0m\n"
-            else
-                echo -e "  ${recursive_options[$i]}\n"
-            fi
-        done
-
-        read -sn 1 key
-
-        case $key in
-            "A") ((recursive_selected--)); [ $recursive_selected -lt 0 ] && recursive_selected=$(( ${#recursive_options[@]} - 1 ));;
-            "B") ((recursive_selected++)); [ $recursive_selected -ge ${#recursive_options[@]} ] && recursive_selected=0 ;;
-            "") 
-                case ${recursive_options[$recursive_selected]} in
-                    "Default")
-                        python3 Archivist-Tools/tools/mass-uppercase.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Recursive")
-                        python3 Archivist-Tools/tools/mass-uppercase-r.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Quit")
-                        return
-                        ;;
-                    *) 
-                        echo -e "\nInvalid selection"
-                        ;;
-                esac
-                ;;
-            *) ;;
-        esac
-    done
-}
-
-# Function to handle Sort by Filetype command and its recursive option
-handle_sort_by_filetype() {
-    recursive_options=("Default" "Recursive" "Quit")
-    recursive_selected=0
-
-    while true; do
-        clear
-        echo -e "\033[1m  Sort by Filetype Options\033[0m\n  "
-        for i in "${!recursive_options[@]}"; do
-            if [ $i -eq $recursive_selected ]; then
-                echo -e "\033[1m➤ ${recursive_options[$i]}\033[0m\n"
-            else
-                echo -e "  ${recursive_options[$i]}\n"
-            fi
-        done
-
-        read -sn 1 key
-
-        case $key in
-            "A") ((recursive_selected--)); [ $recursive_selected -lt 0 ] && recursive_selected=$(( ${#recursive_options[@]} - 1 ));;
-            "B") ((recursive_selected++)); [ $recursive_selected -ge ${#recursive_options[@]} ] && recursive_selected=0 ;;
-            "") 
-                case ${recursive_options[$recursive_selected]} in
-                    "Default")
-                        python3 Archivist-Tools/tools/sort-by-filetype.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Recursive")
-                        python3 Archivist-Tools/tools/sort-by-filetype-r.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Quit")
-                        return
-                        ;;
-                    *) 
-                        echo -e "\nInvalid selection"
-                        ;;
-                esac
-                ;;
-            *) ;;
-        esac
-    done
-}
-
-# Function to handle Sort by Year command and its recursive option
-handle_sort_by_year() {
-    recursive_options=("Default" "Recursive" "Quit")
-    recursive_selected=0
-
-    while true; do
-        clear
-        echo -e "\033[1m  Sort by Year Options\033[0m\n  "
-        for i in "${!recursive_options[@]}"; do
-            if [ $i -eq $recursive_selected ]; then
-                echo -e "\033[1m➤ ${recursive_options[$i]}\033[0m\n"
-            else
-                echo -e "  ${recursive_options[$i]}\n"
-            fi
-        done
-
-        read -sn 1 key
-
-        case $key in
-            "A") ((recursive_selected--)); [ $recursive_selected -lt 0 ] && recursive_selected=$(( ${#recursive_options[@]} - 1 ));;
-            "B") ((recursive_selected++)); [ $recursive_selected -ge ${#recursive_options[@]} ] && recursive_selected=0 ;;
-            "") 
-                case ${recursive_options[$recursive_selected]} in
-                    "Default")
-                        python3 Archivist-Tools/tools/sort-by-year.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Recursive")
-                        python3 Archivist-Tools/tools/sort-by-year-r.py
-                        read -p "Press Enter to return to the menu..."
-                        ;;
-                    "Quit")
-                        return
-                        ;;
-                    *) 
-                        echo -e "\nInvalid selection"
-                        ;;
-                esac
-                ;;
-            *) ;;
-        esac
-    done
-}
-
-# Main loop to navigate through the menu
+# Main loop
 while true; do
     display_list
 
-    # Reading single character input
     read -sn 1 key
 
     case $key in
-        "A") ((selected--)); [ $selected -lt 0 ] && selected=$(( ${#commands[@]} - 1 )) ;;
+        "A") ((selected--)); [ $selected -lt 0 ] && selected=$(( ${#commands[@]} - 1 ));;
         "B") ((selected++)); [ $selected -ge ${#commands[@]} ] && selected=0 ;;
         "") execute_command ;;
         *) ;;
