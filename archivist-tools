@@ -61,7 +61,7 @@ execute_command() {
             read -p "Press Enter to return to the menu..."
             ;;
         "Find by Date") 
-            python3 Archivist-Tools/tools/find-by-date
+            sh Archivist-Tools/tools/find-by-date
             read -p "Press Enter to return to the menu..."
             ;;            
         "Give Random Name") 
