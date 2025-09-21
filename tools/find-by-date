@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Ask for directory
+read -p "Enter directory to search: " dir
+if [[ ! -d "$dir" ]]; then
+    echo "Error: $dir is not a directory."
+    exit 1
+fi
+
+# Ask for month and year
+read -p "Enter month (MM): " month
+read -p "Enter year (YYYY): " year
+
+# Validate input
+if ! [[ "$month" =~ ^(0[1-9]|1[0-2])$ && "$year" =~ ^[0-9]{4}$ ]]; then
+    echo "Invalid month/year format."
+    exit 1
+fi
+
+# Define start and end of month
+start="${year}-${month}-01"
+end=$(date -d "$start +1 month" +%F)
+
+echo "Searching for files created between $start and $end in $dir ..."
+
+# Use find with debugfs/stat (only works if filesystem supports btime)
+find "$dir" -type f | while read -r file; do
+    btime=$(stat -c %W "$file" 2>/dev/null)
+    if [[ "$btime" -gt 0 ]]; then
+        created=$(date -d @"$btime" +%F)
+        if [[ "$created" > "$start" && "$created" < "$end" ]] || [[ "$created" == "$start" ]]; then
+            echo "$file (created: $created)"
+        fi
+    fi
+done
