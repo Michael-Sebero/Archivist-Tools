@@ -29,7 +29,7 @@ These scripts deletes files with specific keywords in a given directory.
 This script will empty the contents of folders recursively in a directory into the inputted directory and delete the folders which contained the files once emptied.
 
 ## Find by Date
-This script will find files sent during a month and year span.
+This script will find files stored during a month and year span.
 
 ## Give Random Name
 This script randomizes filenames in a given directory.
