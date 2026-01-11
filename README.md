@@ -7,7 +7,7 @@ pip install tqdm pillow imagehash piexif
 
 git clone https://github.com/Michael-Sebero/Archivist-Tools
 
-sh /home/$USER/Archivist-Tools/archivist-tools
+python3 /home/$USER/Archivist-Tools/archivist-tools.py
 ```
 
 ## Change Hash 
