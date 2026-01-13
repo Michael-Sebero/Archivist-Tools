@@ -893,6 +893,7 @@ def run_command(cmd: str):
             print(f"\nDeleted {len(deleted)} files")
         
         elif cmd == "Empty Directory Contents":
+            directory = PathUtils.get_valid_path("Directory path: ")
             DirectoryOperations.flatten_directory(directory)
         
         elif cmd == "Find by Date":
