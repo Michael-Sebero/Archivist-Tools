@@ -21,6 +21,12 @@ try:
 except ImportError:
     IMAGING_AVAILABLE = False
 
+try:
+    import mutagen
+    MUTAGEN_AVAILABLE = True
+except ImportError:
+    MUTAGEN_AVAILABLE = False
+
 
 # ============================================================================
 # TERMINAL UI UTILITIES
@@ -714,70 +720,139 @@ class ImageOperations:
     
     @staticmethod
     def organize_by_year(directory: Path, recursive: bool = False):
-        """Organize images/videos by date into Year/Month folders"""
+        """Organize all files by date into Year/Month/Category folders.
+
+        Date source priority:
+          1. Embedded metadata (EXIF for images, ID3/Vorbis for audio, exiftool for any type)
+          2. File modification time (fallback)
+        """
         if not IMAGING_AVAILABLE:
-            print("Warning: PIL not available, using file modification dates only")
-        
-        files = FileScanner.scan(directory, Config.MEDIA_EXTS, recursive)
-        
+            print("Warning: PIL not available, EXIF dates unavailable for images")
+        if not MUTAGEN_AVAILABLE:
+            print("Warning: mutagen not available, tag dates unavailable for audio")
+
+        files = FileScanner.scan(directory, recursive=recursive)
+
         if not files:
-            print("No media files found")
+            print("No files found")
             return
-        
+
         moved = 0
-        
+
         for filepath in files:
             try:
-                # Get date from EXIF or file modification time
                 date = ImageOperations._get_file_date(filepath)
-                
+
                 year = date.strftime("%Y")
                 month = date.strftime("%B")
-                
-                # Determine media type
-                if filepath.suffix.lower() in Config.IMAGE_EXTS:
-                    media_type = "Images"
+
+                # Determine category from extension
+                ext = filepath.suffix.lower()
+                if ext in Config.IMAGE_EXTS:
+                    category = "Images"
+                elif ext in Config.VIDEO_EXTS:
+                    category = "Videos"
+                elif ext in Config.AUDIO_EXTS:
+                    category = "Audio"
+                elif ext in Config.DOCUMENT_EXTS:
+                    category = "Documents"
+                elif ext in Config.ARCHIVE_EXTS:
+                    category = "Archives"
                 else:
-                    media_type = "Videos"
-                
-                target_dir = directory / year / month / media_type
+                    category = "Other"
+
+                target_dir = directory / year / month / category
                 target_dir.mkdir(parents=True, exist_ok=True)
-                
+
                 target_path = target_dir / filepath.name
                 target_path = PathUtils.ensure_unique(target_path)
-                
+
                 shutil.move(str(filepath), str(target_path))
-                print(f"{filepath.name} → {year}/{month}/{media_type}/")
+                print(f"{filepath.name} → {year}/{month}/{category}/")
                 moved += 1
-                
+
             except Exception as e:
                 print(f"Error processing {filepath.name}: {e}")
-        
+
         print(f"\nMoved {moved} files")
     
     @staticmethod
     def _get_file_date(filepath: Path) -> datetime:
-        """Extract date from file (EXIF if available, otherwise modification time)"""
-        if IMAGING_AVAILABLE and filepath.suffix.lower() in Config.IMAGE_EXTS:
+        """Extract date from file metadata, with fallback to modification time.
+
+        Extraction order:
+          1. EXIF (images, via PIL/piexif)
+          2. Audio tags (via mutagen: ID3 TDRC/TYER, Vorbis DATE, MP4 ©day)
+          3. exiftool (any file type, if installed)
+          4. File modification time
+        """
+        ext = filepath.suffix.lower()
+
+        # 1. EXIF for images
+        if IMAGING_AVAILABLE and ext in Config.IMAGE_EXTS:
             try:
                 img = Image.open(filepath)
-                
                 if 'exif' in img.info:
                     exif_data = piexif.load(img.info['exif'])
-                    
-                    # Try DateTimeOriginal
+
+                    # Try DateTimeOriginal first, then DateTime
                     if piexif.ExifIFD.DateTimeOriginal in exif_data.get('Exif', {}):
                         date_str = exif_data['Exif'][piexif.ExifIFD.DateTimeOriginal].decode('utf-8')
                         return datetime.strptime(date_str, "%Y:%m:%d %H:%M:%S")
-                    
-                    # Try DateTime
+
                     if piexif.ImageIFD.DateTime in exif_data.get('0th', {}):
                         date_str = exif_data['0th'][piexif.ImageIFD.DateTime].decode('utf-8')
                         return datetime.strptime(date_str, "%Y:%m:%d %H:%M:%S")
             except Exception:
                 pass
-        
-        # Fallback to file modification time
+
+        # 2. Audio tags via mutagen
+        if MUTAGEN_AVAILABLE and ext in Config.AUDIO_EXTS:
+            try:
+                audio = mutagen.File(filepath)
+                if audio is not None:
+                    # ID3 (MP3): TDRC (recording date, preferred) or TYER (year)
+                    # Vorbis/FLAC: DATE
+                    # MP4/AAC: ©day
+                    for tag in ('TDRC', 'TYER', 'DATE', 'date', '©day'):
+                        if tag in audio:
+                            val = str(audio[tag])
+                            # Full ISO date (YYYY-MM-DD) or bare year
+                            try:
+                                return datetime.strptime(val[:10], "%Y-%m-%d")
+                            except ValueError:
+                                pass
+                            match = re.search(r'(\d{4})', val)
+                            if match:
+                                return datetime(int(match.group(1)), 1, 1)
+            except Exception:
+                pass
+
+        # 3. exiftool fallback — handles PDFs, Office docs, and many other formats
+        try:
+            result = subprocess.run(
+                [
+                    'exiftool',
+                    '-DateTimeOriginal', '-CreateDate', '-ModifyDate',
+                    '-s3',   # bare values, one per line
+                    str(filepath),
+                ],
+                capture_output=True, text=True, timeout=5
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                # Use the first non-empty date returned
+                for line in result.stdout.splitlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        return datetime.strptime(line, "%Y:%m:%d %H:%M:%S")
+                    except ValueError:
+                        pass
+        except (FileNotFoundError, subprocess.TimeoutExpired, Exception):
+            pass
+
+        # 4. File modification time
         return datetime.fromtimestamp(filepath.stat().st_mtime)
 
 
