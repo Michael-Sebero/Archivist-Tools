@@ -580,6 +580,62 @@ class FileNaming:
         print(f"\nRenamed {renamed} files")
 
 
+class FolderNaming:
+    """Folder renaming operations"""
+
+    @staticmethod
+    def bulk_rename_by_keyword(directory: Path):
+        """Find folders matching a keyword and rename them in bulk"""
+        keyword = input("Keyword to search for: ").strip()
+
+        if not keyword:
+            print("Error: Keyword cannot be empty")
+            return
+
+        matches = [
+            item for item in directory.iterdir()
+            if item.is_dir() and keyword in item.name
+        ]
+
+        if not matches:
+            print(f"\nNo folders containing '{keyword}' found in '{directory}'")
+            return
+
+        print(f"\nFound {len(matches)} folder(s) containing '{keyword}':")
+        for folder in sorted(matches):
+            print(f"  {folder.name}")
+
+        replacement = input(f"\nReplace '{keyword}' with: ").strip()
+
+        print("\nProposed renames:")
+        rename_pairs = []
+        for folder in sorted(matches):
+            new_name = folder.name.replace(keyword, replacement)
+            print(f"  '{folder.name}'  →  '{new_name}'")
+            rename_pairs.append((folder, new_name))
+
+        if not UserInput.yes_no("\nProceed with renaming?"):
+            print("Aborted. No folders were renamed.")
+            return
+
+        success, failed = 0, 0
+        for old_path, new_name in rename_pairs:
+            new_path = old_path.parent / new_name
+            try:
+                if new_path.exists():
+                    print(f"  Skipped: '{new_name}' already exists")
+                    failed += 1
+                else:
+                    old_path.rename(new_path)
+                    print(f"  Renamed: '{old_path.name}'  →  '{new_name}'")
+                    success += 1
+            except Exception as e:
+                print(f"  Error renaming '{old_path.name}': {e}")
+                failed += 1
+
+        print(f"\nDone. {success} renamed, {failed} skipped/failed.")
+
+
 class FileOrganization:
     """File organization operations"""
     
@@ -989,6 +1045,10 @@ def run_command(cmd: str):
             directory = PathUtils.get_valid_path("Directory path: ")
             FileNaming.rename_detailed_files(directory)
         
+        elif cmd == "Rename Folder Keyword":
+            directory = PathUtils.get_valid_path("Directory path: ")
+            FolderNaming.bulk_rename_by_keyword(directory)
+        
         elif cmd == "Sort by File Format":
             directory = PathUtils.get_valid_path("Directory path: ")
             FileOrganization.by_extension(directory)
@@ -1035,6 +1095,7 @@ def main():
         "Give Random Name",
         "Mass Uppercase",
         "Rename Detailed Files",
+        "Rename Folder Keyword",
         "Sort by File Format",
         "Sort by Filetype",
         "Sort by Title",

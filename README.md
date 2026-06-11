@@ -53,5 +53,12 @@ This sorts files by their filetype into separate directories,
 ## Sort by Title
 This sorts files by their common title into separate folders.
 
+## Rename Folder Keyword
+This finds folders containing a specific keyword in a given directory and renames them by replacing that keyword with a new string.
+
+Before: `Project_Draft_v1`, `Project_Draft_v2`
+
+After: `Project_Final_v1`, `Project_Final_v2`
+
 ## Sort by Year
 This sorts files in a given directory based off the year created / modified into separate year directories.
