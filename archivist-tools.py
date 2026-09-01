@@ -13,19 +13,67 @@ from collections import defaultdict
 from datetime import datetime
 import subprocess
 
-# Optional imports with graceful fallbacks
-try:
-    from PIL import Image
-    import piexif
-    IMAGING_AVAILABLE = True
-except ImportError:
+# Optional imports with graceful fallbacks (auto-installs missing deps)
+def _is_installed(module_name: str) -> bool:
+    """Check whether a module is importable without actually importing it into this namespace."""
+    try:
+        __import__(module_name)
+        return True
+    except ImportError:
+        return False
+
+
+def _pip_install(package: str) -> bool:
+    """Install a package with pip3, using --break-system-packages. Returns True on success."""
+    print(f"Missing dependency '{package}' — installing...")
+    try:
+        subprocess.run(
+            ["pip3", "install", "--break-system-packages", package],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"  Failed to install '{package}': {e.stderr.strip() if e.stderr else e}")
+        return False
+    except FileNotFoundError:
+        print("  pip3 not found on this system; skipping auto-install")
+        return False
+
+
+# Imaging support: PIL/Pillow + piexif (each checked, then installed only if missing)
+_imaging_ok = True
+for _module, _package in (("PIL", "Pillow"), ("piexif", "piexif")):
+    if not _is_installed(_module):
+        if not _pip_install(_package):
+            _imaging_ok = False
+
+if _imaging_ok:
+    try:
+        from PIL import Image
+        import piexif
+        IMAGING_AVAILABLE = True
+    except ImportError:
+        IMAGING_AVAILABLE = False
+else:
     IMAGING_AVAILABLE = False
 
-try:
-    import mutagen
-    MUTAGEN_AVAILABLE = True
-except ImportError:
+if not IMAGING_AVAILABLE:
+    print("Warning: imaging dependencies unavailable; EXIF date features disabled")
+
+# Audio tag support: mutagen (checked, then installed only if missing)
+if not _is_installed("mutagen") and not _pip_install("mutagen"):
     MUTAGEN_AVAILABLE = False
+else:
+    try:
+        import mutagen
+        MUTAGEN_AVAILABLE = True
+    except ImportError:
+        MUTAGEN_AVAILABLE = False
+
+if not MUTAGEN_AVAILABLE:
+    print("Warning: mutagen unavailable; audio tag date features disabled")
 
 
 # ============================================================================
